@@ -1,23 +1,16 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 	"unicode"
+
+	"github.com/thamenato/advent-of-code/libs/go/inputfilereader"
 )
 
 func main() {
-	readFile, err := os.Open("./files/input")
-
-	if err != nil {
-		fmt.Println(err)
-	}
-	fileScanner := bufio.NewScanner(readFile)
-
-	fileScanner.Split(bufio.ScanLines)
+	fileScanner, readFile := inputfilereader.GetLines("./files/input")
 
 	sum := 0
 	for fileScanner.Scan() {

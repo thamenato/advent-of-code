@@ -16,7 +16,9 @@
     in {
       devShells.default = pkgs.mkShell {
         packages = with pkgs; [
+          delve
           go
+          go-tools
           golangci-lint
           gopls
           pre-commit

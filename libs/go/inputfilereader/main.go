@@ -7,7 +7,7 @@ import (
 )
 
 func GetLines(filepath string) (*bufio.Scanner, *os.File) {
-	readFile, err := os.Open("./files/input")
+	readFile, err := os.Open(filepath)
 
 	if err != nil {
 		fmt.Println(err)

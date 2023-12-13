@@ -18,7 +18,7 @@ func main() {
 	if os.Args[1] == "part_1" {
 		SolvePartOne(fileScanner)
 	} else if os.Args[1] == "part_2" {
-		fmt.Println("part_2")
+		SolvePartTwo(fileScanner)
 	} else {
 		fmt.Println("Wrong argument")
 		os.Exit(1)

@@ -2,13 +2,15 @@ package main
 
 import (
 	"bufio"
+	"sort"
 
 	"github.com/rs/zerolog/log"
 )
 
 type NumberRange struct {
-	MIN int `json:"min"`
-	MAX int `json:"max"`
+	MIN    int `json:"min"`
+	MAX    int `json:"max"`
+	OFFSET int `json:"offset"`
 }
 
 func SolvePartTwo(fileScanner *bufio.Scanner) {
@@ -26,8 +28,8 @@ func SolvePartTwo(fileScanner *bufio.Scanner) {
 
 	log.Debug().Interface("currRanges", currRanges).Send()
 
-	var srcRange []NumberRange
-	var dstRange []NumberRange
+	fileScanner.Scan() // go over first empty line
+	var conversion []NumberRange
 
 FILE_LOOP:
 	for fileScanner.Scan() {
@@ -35,45 +37,47 @@ FILE_LOOP:
 
 		if len(line) == 0 {
 			log.Debug().Msg("Empty line")
+
+			sort.Slice(conversion, func(i, j int) bool {
+				return conversion[i].MIN < conversion[j].MIN
+			})
+			log.Debug().Interface("conversion", conversion).Send()
+
+			var nextRanges []NumberRange
+
+			i := 0
+			for _, r := range currRanges {
+				log.Debug().Interface("r", r).Send()
+				if r.MIN < conversion[i].MIN {
+					log.Debug().Interface("r", r).Send()
+					// if r.MAX < conversion[i].MIN {
+					// 	nr := NumberRange{MIN: r.MIN, MAX: r.MAX}
+					// 	nextRanges = append(nextRanges, nr)
+					// } else {
+					// 	nr := NumberRange{MIN: r.MIN, MAX: conversion[i].MIN - r.MAX}
+					// 	nextRanges = append(nextRanges, nr)
+
+					// 	r.MIN = conversion[i].MIN
+					// }
+				}
+			}
+
+			log.Debug().Interface("nextRanges", nextRanges).Send()
 			continue FILE_LOOP
 		}
 
 		if reMap.MatchString(line) {
-			log.Debug().Interface("srcRange", srcRange).Send()
-			log.Debug().Interface("dstRange", dstRange).Send()
-
-			var tmpRanges []NumberRange
-
-			for _, curr := range currRanges {
-				for _, src := range srcRange {
-					if src.MIN <= curr.MIN && src.MAX >= curr.MAX {
-						// inside of range
-					} else if src.MIN <= curr.MIN && src.MAX < curr.MAX {
-						// inside min, outside max
-					} else if src.MIN > curr.MIN && src.MAX >= curr.MAX {
-						// outside min, inside max
-					} else {
-						// outside min, outside max
-					}
-
-				}
-
-			}
-
 			// empty ranges
-			srcRange = []NumberRange{}
-			dstRange = []NumberRange{}
+			conversion = []NumberRange{}
 
 			match := reMap.FindStringSubmatch(line)
 			mapName := match[reMap.SubexpIndex("map")]
 			log.Info().Str("mapName", mapName).Msg("Found header")
-
-			// to the thing
 		} else {
 			numbers := getNumbers(line)
-
-			srcRange = append(srcRange, getNumberRange(numbers[1], numbers[2]))
-			dstRange = append(dstRange, getNumberRange(numbers[0], numbers[2]))
+			numberRange := getNumberRange(numbers[1], numbers[2])
+			numberRange.OFFSET = numbers[0] - numbers[1]
+			conversion = append(conversion, numberRange)
 		}
 	}
 

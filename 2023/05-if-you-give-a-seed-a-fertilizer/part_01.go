@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strconv"
 
+	"github.com/rs/zerolog/log"
 	"github.com/samber/lo"
 	"golang.org/x/exp/maps"
 )
@@ -15,7 +16,7 @@ var (
 )
 
 func SolvePartOne(fileScanner *bufio.Scanner) {
-	log.Info("Solve Part 01")
+	log.Info().Msg("Solve Part 01")
 
 	lookupMap := make(map[string]map[int]bool)
 	tableName := "seeds"
@@ -28,12 +29,12 @@ func SolvePartOne(fileScanner *bufio.Scanner) {
 		lookupMap[tableName][s] = false
 	}
 
-	log.DebugF("%s=%v", tableName, lookupMap[tableName])
+	log.Debug().Msgf("%s=%v", tableName, lookupMap[tableName])
 
 	// drop empty line
 	fileScanner.Scan()
 
-	log.DebugF("lookupMap=%v", lookupMap)
+	log.Debug().Msgf("lookupMap=%v", lookupMap)
 	mapName := ""
 	// start scanning map information
 OUTER:
@@ -41,7 +42,7 @@ OUTER:
 		line := fileScanner.Text()
 
 		if len(line) == 0 {
-			log.DebugF("found empty line")
+			log.Debug().Msgf("found empty line")
 			for k, v := range lookupMap[tableName] {
 				if !v {
 					lookupMap[mapName][k] = false
@@ -51,7 +52,7 @@ OUTER:
 			tableName = mapName
 			mapName = ""
 
-			log.DebugF("tableName=%s, mapName=%s", tableName, mapName)
+			log.Debug().Msgf("tableName=%s, mapName=%s", tableName, mapName)
 			continue OUTER
 		}
 
@@ -59,7 +60,7 @@ OUTER:
 			match := reMap.FindStringSubmatch(line)
 			mapName = match[reMap.SubexpIndex("map")]
 			lookupMap[mapName] = make(map[int]bool)
-			log.DebugF("found map=%s", mapName)
+			log.Debug().Msgf("found map=%s", mapName)
 		} else {
 			numbers := getNumbers(line)
 			markTrue := []int{}
@@ -76,17 +77,17 @@ OUTER:
 					}
 				}
 			}
-			log.DebugF("mark_true=%v", markTrue)
+			log.Debug().Msgf("mark_true=%v", markTrue)
 			for _, k := range markTrue {
 				lookupMap[tableName][k] = true
 			}
-			log.DebugF("%s=%v", tableName, lookupMap[tableName])
+			log.Debug().Msgf("%s=%v", tableName, lookupMap[tableName])
 		}
 	}
 
-	log.DebugF("lookupMap=%v", lookupMap)
+	log.Debug().Msgf("lookupMap=%v", lookupMap)
 
-	log.NoticeF("lowest location = %d", lo.Min(maps.Keys(lookupMap["location"])))
+	log.Debug().Msgf("lowest location = %d", lo.Min(maps.Keys(lookupMap["location"])))
 }
 
 func getNumbers(line string) []int {

@@ -28,6 +28,8 @@
             pre-commit
             uv
             python3
+            ruff
+            ruff-lsp
           ];
         };
       }

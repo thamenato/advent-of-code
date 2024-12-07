@@ -74,12 +74,6 @@ class Visited:
         else:
             self._col[position.col] = [position.row]
 
-    def visited_rows_at_col(self, col):
-        return self._col.get(col, [])
-
-    def visited_cols_at_row(self, row):
-        return self._row.get(row, [])
-
     @property
     def visited(self):
         return self._visited
@@ -136,6 +130,7 @@ class Map:
 
                 if "#" in self._the_map[idx][start:end]:
                     found = True
+                    print(f"found_at={idx}{start}:{end}")
             case "col":
                 if guard.orientation == Orientation.LEFT:
                     start = 0
@@ -147,6 +142,7 @@ class Map:
                 for row in range(start, end):
                     if "#" in self._the_map[row][idx]:
                         found = True
+                        print(f"found_at={row}|{idx}")
 
         return found
 
@@ -185,31 +181,49 @@ def part_two(data):
         if guard.orientation in [Orientation.UP, Orientation.DOWN]:
             i = next_step.row
             if guard.orientation == Orientation.UP:
-                check = next_step.col + 1
+                check = range(next_step.col + 1, the_map._max_col)
                 offset = -1
             else:
-                check = next_step.col - 1
+                check = range(next_step.col - 1, 0, -1)
                 offset = 1
-            if (i, check) in visited.visited:
-                if the_map.has_obstruction(guard, mode="row", idx=i):
-                    print(f"trying_at={i + offset},{guard.position.col}")
-                    if the_map.matrix[i + offset][guard.position.col] != "#":
-                        print("\tcorrect")
-                        return 1
+
+            walked = False
+            for c in check:
+                if the_map.matrix[i][c] == "#":
+                    break
+                if (i, c) in visited.visited:
+                    print(f"walked at {i}|{c}")
+                    walked = True
+                    break
+
+            if walked and the_map.has_obstruction(guard, mode="row", idx=i):
+                print(f"trying_at={i + offset},{guard.position.col}")
+                if the_map.matrix[i + offset][guard.position.col] != "#":
+                    print("\tcorrect")
+                    return 1
         else:
             i = next_step.col
             if guard.orientation == Orientation.LEFT:
-                check = next_step.row - 1
+                check = range(next_step.row - 1, 0, -1)
                 offset = -1
             else:
-                check = next_step.row + 1
+                check = range(next_step.row + 1, the_map._max_row)
                 offset = 1
-            if (check, i) in visited.visited:
-                if the_map.has_obstruction(guard, mode="col", idx=i):
-                    print(f"trying_at={guard.position.row},{i + offset}")
-                    if the_map.matrix[guard.position.row][i + offset] != "#":
-                        print("\tcorrect")
-                        return 1
+
+            walked = False
+            for c in check:
+                if the_map.matrix[c][i] == "#":
+                    break
+                if (c, i) in visited.visited:
+                    print(f"walked at {c}|{i}")
+                    walked = True
+                    break
+
+            if walked and the_map.has_obstruction(guard, mode="col", idx=i):
+                print(f"trying_at={guard.position.row},{i + offset}")
+                if the_map.matrix[guard.position.row][i + offset] != "#":
+                    print("\tcorrect")
+                    return 1
 
         return 0
 

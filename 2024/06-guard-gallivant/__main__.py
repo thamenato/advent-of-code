@@ -105,6 +105,17 @@ class Map:
     def matrix(self):
         return self._the_map
 
+    def get_altered_copy(self, row, col):
+        if self._the_map[row][col] == "^":
+            return None
+
+        new_map = self._the_map.copy()
+        line = new_map[row]
+        line = line[0:col] + "#" + line[col + 1 :]
+        new_map[row] = line
+
+        return Map("\n".join(new_map))
+
     def is_out_of_bounds(self, position: Position):
         if position.row < 0 or position.row >= self._max_row:
             return True
@@ -147,7 +158,7 @@ class Map:
         return found
 
 
-def part_one(data, visited=False):
+def part_one(data, get_total=True):
     guard = _find_guard(data)
     the_map = Map(data)
     visited = Visited()
@@ -165,87 +176,47 @@ def part_one(data, visited=False):
 
         next_step = guard.get_next_step()
 
-    return visited.total_visited
+    if get_total:
+        return visited.total_visited
+    else:
+        return visited.visited
+
+
+def _walk_the_map(guard, a_map):
+    next_step = guard.get_next_step()
+    visited = Visited()
+    visited.append(guard.position)
+
+    repeat = 0
+    while not a_map.is_out_of_bounds(next_step):
+        spot = a_map.get_spot(next_step)
+        if spot == "#":
+            guard.rotate()
+        else:
+            if astuple(next_step) in visited.visited:
+                repeat += 1
+            elif repeat >= visited.total_visited:
+                return True
+            else:
+                repeat = 0
+
+            visited.append(next_step)
+            guard.move_to(next_step)
+
+        next_step = guard.get_next_step()
+
+    return False
 
 
 def part_two(data):
     guard = _find_guard(data)
     the_map = Map(data)
-    visited = Visited()
+    visited = part_one(data, get_total=False)
 
-    visited.append(guard.position)
-
-    def _check_possibilities():
-        next_step = guard.get_next_step()
-
-        if guard.orientation in [Orientation.UP, Orientation.DOWN]:
-            i = next_step.row
-            if guard.orientation == Orientation.UP:
-                check = range(next_step.col + 1, the_map._max_col)
-                offset = -1
-            else:
-                check = range(next_step.col - 1, 0, -1)
-                offset = 1
-
-            walked = False
-            for c in check:
-                if the_map.matrix[i][c] == "#":
-                    break
-                if (i, c) in visited.visited:
-                    print(f"walked at {i}|{c}")
-                    walked = True
-                    break
-
-            if walked and the_map.has_obstruction(guard, mode="row", idx=i):
-                print(f"trying_at={i + offset},{guard.position.col}")
-                if the_map.matrix[i + offset][guard.position.col] != "#":
-                    print("\tcorrect")
-                    return 1
-        else:
-            i = next_step.col
-            if guard.orientation == Orientation.LEFT:
-                check = range(next_step.row - 1, 0, -1)
-                offset = -1
-            else:
-                check = range(next_step.row + 1, the_map._max_row)
-                offset = 1
-
-            walked = False
-            for c in check:
-                if the_map.matrix[c][i] == "#":
-                    break
-                if (c, i) in visited.visited:
-                    print(f"walked at {c}|{i}")
-                    walked = True
-                    break
-
-            if walked and the_map.has_obstruction(guard, mode="col", idx=i):
-                print(f"trying_at={guard.position.row},{i + offset}")
-                if the_map.matrix[guard.position.row][i + offset] != "#":
-                    print("\tcorrect")
-                    return 1
-
-        return 0
-
-    rotated = 0
-    next_step = guard.get_next_step()
-    obstructions = 0
-    while not the_map.is_out_of_bounds(next_step):
-        print(guard.orientation)
-        if rotated >= 3:
-            obstructions += _check_possibilities()
-
-        spot = the_map.get_spot(next_step)
-        if spot == "#":
-            guard.rotate()
-            rotated += 1
-        else:
-            visited.append(next_step)
-            guard.move_to(next_step)
-
-        next_step = guard.get_next_step()
-
-    return obstructions
+    for v in visited:
+        test_map = the_map.get_altered_copy(v[0], v[1])
+        if test_map:
+            print(_walk_the_map(guard, test_map))
 
 
 def main():

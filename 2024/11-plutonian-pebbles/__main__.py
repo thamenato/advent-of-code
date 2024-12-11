@@ -7,60 +7,70 @@ parser.add_argument("part", type=int)
 parser.add_argument("filename")
 
 
-def _process_stone(value):
-    if int(value) == 0:
-        return ["1"]
+@dataclass
+class Stone:
+    value: str
+    count: int
 
-    if len(value) % 2 == 0:
-        size = int(len(value))
+
+def _process_stone(stone):
+    if int(stone.value) == 0:
+        return [Stone("1", stone.count)]
+
+    if len(stone.value) % 2 == 0:
+        size = int(len(stone.value))
         half = int(size / 2)
-        left = value[:half]
-        right = str(int(value[half:]))  # remove trailing zeroes
+        left = Stone(stone.value[:half], stone.count)
+        right = Stone(
+            str(int(stone.value[half:])), stone.count
+        )  # remove trailing zeroes
         return [left, right]
 
-    value = str(int(value) * 2024)
+    value = Stone(str(int(stone.value) * 2024), stone.count)
     return [value]
 
 
-# def _process_blink(stone_list):
-#     after_blink = {}
-#     for value in stone_list:
-#         if value in after_blink:
-#             after_blink[value] += 1
+def _process_blink(stone_list):
+    after_blink = []
+    for stone in stone_list:
+        after_blink += _process_stone(stone)
 
-#         stones = _process_stone(value)
-#         after_blink += processed
+    seen = {}
+    for stone in after_blink:
+        if stone.value in seen:
+            seen[stone.value] += stone.count
+        else:
+            seen[stone.value] = stone.count
 
-#     result = after_blink.copy()
+    return [Stone(k, v) for k, v in seen.items()]
 
 
 def part_one(data):
     blinks = 25
 
-    result = data.split()
+    stone_list = [Stone(v, 1) for v in data.split()]
     for i in range(0, blinks):
-        after_blink = []
-        for stone in result:
-            processed = _process_stone(stone)
-            after_blink += processed
+        stone_list = _process_blink(stone_list)
 
-        result = after_blink.copy()
+    total = 0
+    for stone in stone_list:
+        total += stone.count
 
-    return len(result)
+    return total
 
 
 def part_two(data):
-    blinks = 25
+    blinks = 75
 
-    result = data.split()
+    stone_list = [Stone(v, 1) for v in data.split()]
     for i in range(0, blinks):
-        after_blink = []
-        for stone in result:
-            processed = _process_stone(stone)
-            after_blink += processed
+        stone_list = _process_blink(stone_list)
 
-        result = after_blink.copy()
-    return len(result)
+    total = 0
+    for stone in stone_list:
+        total += stone.count
+
+    return total
 
 
 def main():
